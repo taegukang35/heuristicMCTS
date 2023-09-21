@@ -886,6 +886,7 @@ public:
         if (is_block_all_used(!myturn)){
             if(my_dis <= op_dis || is_block_all_used(myturn))
                 return get_best_move_action();
+            else return NULL;
         }
         else{
             return NULL;
