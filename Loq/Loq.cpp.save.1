@@ -1,0 +1,167 @@
+#include <iostream>
+#include<ctime>
+#include "./loq2/src/loq2/native/library.h"
+#include "./loq2/src/loq2/native/state/util.cpp"
+#include "./loq2/src/loq2/native/map/map.cpp"
+#include "./loq2/src/loq2/native/point/point.cpp"
+#include "./loq2/src/loq2/native/state/place.cpp"
+#include "./loq2/src/loq2/native/state/endable.cpp"
+#include "./loq2/src/loq2/native/state/move.cpp"
+#include "./loq2/src/loq2/native/state/cross.cpp"
+#include "./loq2/src/loq2/native/block/lblock.cpp"
+#include "./loq2/src/loq2/native/block/iblock.cpp"
+#include "./loq2/src/loq2/native/state/mask.cpp"
+
+#include "../MCTS/MCTS.h"
+#include "Loq.h"
+#include "save.h"
+#include <stdlib.h>
+#include "bush.h"
+
+#define HUMAN 0
+#define Agent 1
+using namespace std;
+
+int main(void){
+    const int THREAD_NUM = 20;
+
+    const int epochs = 2000;
+    const int rollout_num = 20;
+    vector<MCTS::MoveInfo> infos;
+    LoqState now_state;
+    LoqState* st_ptr = nullptr;
+    int i = 1;
+    double sum = 0;
+    int cnt = 0;
+    double maxTime = -1;
+    cout << now_state.to_string();
+
+    MCTS::Action* prev_action[2] = {nullptr, nullptr};
+    LoqState predicted_state[2] = {now_state, now_state};
+    ::State mask;
+    LoqState masked_state;
+
+
+    while(!now_state.is_done()){
+        if(now_state.get_turn() == 1 && Agent){
+            if(HUMAN) {
+                int t,x,y,w;
+                MCTS::Action* policy = nullptr;
+                while(true) {
+                cout << "INPUT(type,x,y,w) : ";
+                cin >> t >> x >> y >> w;
+                policy = new LoqAction(t,x,y,w);
+                st_ptr = (LoqState*)now_state.step(policy, now_state.get_turn());
+                if((int)(st_ptr->get_internal_state().position().x()) != 0)
+                    break;
+                }
+                now_state = *st_ptr;
+                bool turn = now_state.get_turn();
+                Point k = now_state.get_internal_state().position(!turn);
+                Point p = now_state.get_internal_state().position(turn);
+                if(turn)
+                    cout << "<kaist>\n";
+                else
+                    cout << "<postech>\n";
+                printf("kaist : %d postech : %d\n", now_state.bfs(k,0), now_state.bfs(p,1));
+                cout << now_state.to_string() << endl;
+                cout << "Move " << i << endl;
+                delete policy;
+            }
+            else {
+                MCTS::Action* policy = now_state.get_best_move_action();
+                LoqState* st_ptr = (LoqState*)now_state.step(policy, now_state.get_turn());
+                now_state = *st_ptr;
+                bool turn = now_state.get_turn();
+                Point k = now_state.get_internal_state().position(!turn);
+                Point p = now_state.get_internal_state().position(turn);
+                if(turn)
+                    cout << "<kaist>\n";
+                else
+                    cout << "<postech>\n";
+                printf("kaist : %d postech : %d\n", now_state.bfs(k,0), now_state.bfs(p,1));
+                cout << now_state.to_string() << endl;
+                cout << "Move " << i << endl;
+                delete policy;
+            }
+        }
+        else {
+            int now_turn = now_state.get_turn();
+            mask = now_state.get_internal_state().mask();
+            masked_state = LoqState(mask, now_turn);
+            predicted_state[now_turn] = makePredictedState(masked_state, predicted_state[now_turn], prev_action[now_turn]);
+
+            MCTS::Action* policy = now_state.policy();
+            if(i<=2){
+                policy = now_state.get_best_move_action();
+                LoqState* test_state = (LoqState*) now_state.step(policy, now_state.get_turn());
+                if (test_state->get_internal_state().p.x() != 0) {
+                }
+                else
+                    policy = NULL;
+            }
+            pol:;
+            if(policy == NULL){
+                time_t t = time(NULL);
+                cnt++;
+                
+                MCTS::MoveInfo info = get_MoveInfo(now_state, epochs, rollout_num, THREAD_NUM);
+                
+                if(info.win_rate < 0.1f) {
+                    policy = now_state.get_best_move_action();
+                    goto pol;
+                }
+                time_t fin = time(NULL);
+                double elapsed = (double)(fin - t);
+                sum += elapsed;
+                maxTime = max(elapsed, maxTime);
+                printf("elasped time : %f\n", elapsed);
+                printf("average elasped time : %f\n", sum / (cnt));
+                printf("max elasped time : %f\n", maxTime);
+                now_state = *(LoqState*)info.state;
+                bool turn = now_state.get_turn();
+                Point k = now_state.get_internal_state().position(!turn);
+                Point p = now_state.get_internal_state().position(turn);
+                if(turn)
+                    cout << "<kaist>\n";
+                else
+                    cout << "<postech>\n";
+                printf("kaist : %d postech : %d\n", now_state.bfs(k,0), now_state.bfs(p,1));
+                cout << "Move by SearchTree : " << info.win_rate << endl;
+                cout << "Move " << i << endl;
+                cout << info.state->to_string() << endl;
+                cout << info.action->to_string() << endl;
+                infos.push_back(info);
+            else{
+                if(st_ptr != nullptr)
+                    delete st_ptr;
+                LoqState* st_ptr = (LoqState*)now_state.step(policy, now_state.get_turn());
+                now_state = *st_ptr;
+                prev_action[now_turn] = policy->copy();
+                st_ptr = (LoqState*) predicted_state[now_turn].step(policy, now_turn);
+                predicted_state[now_turn] = *st_ptr;
+
+                
+                bool turn = now_state.get_turn();
+                if(turn)
+                    cout << "<kaist>\n";
+                else
+                    cout << "<postech>\n";
+                cout << "Move by policy" << endl;
+                cout << "Move " << i << endl;
+                cout << now_state.to_string() << endl;
+                cout << policy->to_string() << endl;
+                delete policy;
+            }
+        }
+        i++;
+    }
+
+    saveMoveInfo(infos);
+
+    for(auto info : infos)
+        free_MoveInfo(info);
+
+    return 0;
+}
+
