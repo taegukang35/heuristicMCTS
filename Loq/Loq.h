@@ -603,9 +603,9 @@ public:
         int compen = 0;
         re:;
         float blockratio = 0.3; //전체 행동중 블럭을 놓는 비율
-        float betweenwallratio = 0.6f; //블럭을 놓는 행동 중, 벽 근처에 놓는 비율. 다른 부분이 구현되면 수치 조정.
+        float betweenwallratio = 0.6; //블럭을 놓는 행동 중, 벽 근처에 놓는 비율. 다른 부분이 구현되면 수치 조정.
         //float moveratio = 0.7f; // 전체행동 중 움직이는 비율
-        float bestmoveratio = 0.9f; // 움직이는 행동 중, 최단거리로 움직이는 비율
+        float bestmoveratio = 1.0; // 움직이는 행동 중, 최단거리로 움직이는 비율
         int totalMovecnt = 100;
         std::uniform_int_distribution<int> distribution(0, 100);
         if(distribution(generator) < 100 * blockratio) {
