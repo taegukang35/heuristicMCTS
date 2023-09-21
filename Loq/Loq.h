@@ -262,8 +262,17 @@ class LoqState : public MCTS::State{
                             int sop_dis = next_mcts_state->bfs(next_state.position(), next_state.getTurn());
                             int smy_dis =next_mcts_state->bfs(next_state.position(false), !next_state.getTurn());
 
-                            if(((smy_dis - my_dis) - (sop_dis - oppo_dis) >= 0) && compen == 0){
+
+                            if(compen == 0){
                                 delete action;
+                            }
+                            else if (sop_dis - oppo_dis <= 0){
+                                delete action;
+                            }
+                            else if (smy_dis - my_dis > 2){
+                                if (sop_dis - oppo_dis <= 3){
+                                    delete action;
+                                }
                             }
                             else{
                                 actions.push_back(action);
@@ -331,9 +340,16 @@ class LoqState : public MCTS::State{
                             int sop_dis = next_mcts_state->bfs(next_state.position(), next_state.getTurn());
                             int smy_dis =next_mcts_state->bfs(next_state.position(false), !next_state.getTurn());
 
-                            if(((smy_dis - my_dis) - (sop_dis - oppo_dis) >= 0) && compen == 0){
-			       
+                            if(compen == 0){
                                 delete action;
+                            }
+                            else if (sop_dis - oppo_dis <= 0){
+                                delete action;
+                            }
+                            else if (smy_dis - my_dis > 2){
+                                if (sop_dis - oppo_dis <= 3){
+                                    delete action;
+                                }
                             }
                             else{
                                 actions.push_back(action);
