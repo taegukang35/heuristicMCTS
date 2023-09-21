@@ -886,40 +886,6 @@ public:
         if (is_block_all_used(!myturn)){
             if(my_dis <= op_dis || is_block_all_used(myturn))
                 return get_best_move_action();
-            else{
-                vector<MCTS::Action*>candidates;
-                for(int i = 1; i <=9; ++i) {
-                    for(int j = 1; j <=9; ++j){
-                        for(int w = 1; w<=2;++w)
-                            if((int)orgstate.act(2,i,j,w).position().x() != 0)
-                                candidates.push_back(new LoqAction(2,i,j,w));
-                        for(int w = 1; w<=4;++w)
-                            if((int)orgstate.act(3,i,j,w).position().x() != 0)
-                                candidates.push_back(new LoqAction(3,i,j,w));
-                    }
-                }
-
-                vector<pair<MCTS::Action*, int>> actions;
-                for (auto action : candidates){
-                    LoqState* st_ptr = (LoqState*) step(action, get_turn());
-                    LoqState new_state = *st_ptr;
-                    int n_op_dis = new_state.bfs(new_state.get_internal_state().position(false), !myturn);
-                    int n_my_dis = new_state.bfs(new_state.get_internal_state().position(true), myturn);
-                    int val = (n_my_dis - my_dis) - (n_op_dis - op_dis); // val 작을수록 좋음
-                    if ((int)st_ptr->get_internal_state().position().x() != 0)
-                        actions.emplace_back(make_pair(action, val));
-                }
-
-                sort(actions.begin(), actions.end(), compare);
-                if (actions.empty()) return nullptr;
-                MCTS::Action* act = actions[0].first->copy();
-
-                for(auto it :candidates){
-
-                    delete it;
-                }
-                return act;
-            }
         }
         else{
             return NULL;
