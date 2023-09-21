@@ -265,18 +265,22 @@ class LoqState : public MCTS::State{
 
                             if(compen == 0){
                                 delete action;
+                                action = nullptr;
                             }
-                            else if (sop_dis - oppo_dis <= 0){
+                            // 상대 경로가 줄어들지 않으면 action 없앰
+                            if (action != nullptr && (sop_dis - oppo_dis <= 0)){
                                 delete action;
+                                action = nullptr;
                             }
-                            else if (smy_dis - my_dis > 2){
+                            // 내 경로가 증가하는데 상대 경로 3보다 증가하지 않으면 action 없앰
+                            if (action != nullptr && (smy_dis - my_dis > 2)){
                                 if (sop_dis - oppo_dis <= 3){
                                     delete action;
+                                    action = nullptr;
                                 }
                             }
-                            else{
+                            if (action != nullptr)
                                 actions.push_back(action);
-                            }
                         }
                         delete next_mcts_state;
                     }
@@ -342,24 +346,29 @@ class LoqState : public MCTS::State{
 
                             if(compen == 0){
                                 delete action;
+                                action = nullptr;
                             }
-                            else if (sop_dis - oppo_dis <= 0){
+                            // 상대 경로가 줄어들지 않으면 action 없앰
+                            if (action != nullptr && (sop_dis - oppo_dis <= 0)){
                                 delete action;
+                                action = nullptr;
                             }
-                            else if (smy_dis - my_dis > 2){
+                            // 내 경로가 증가하는데 상대 경로 3보다 증가하지 않으면 action 없앰
+                            if (action != nullptr && (smy_dis - my_dis > 2)){
                                 if (sop_dis - oppo_dis <= 3){
                                     delete action;
+                                    action = nullptr;
                                 }
                             }
-                            else{
+                            if (action != nullptr)
                                 actions.push_back(action);
-                            }
                         }
                         delete next_mcts_state;
                     }
                 }
             }
-
+            // 만약 action 비어있으면 최단경로로 이동해라
+            if (actions.empty()) actions.push_back((LoqAction*)get_best_move_action());
             return actions;
         }
 
