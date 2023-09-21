@@ -191,7 +191,7 @@ public:
 
 
         // MOVE - 맵 밖을 벗어나는 것도 허용임
-        int pos[] = {curstate.position().x(), curstate.position().y()};
+        /*int pos[] = {curstate.position().x(), curstate.position().y()};
         for (int d = 0; d < 12; d++){
             if (curstate.act(1,pos[0]+dx[d],pos[1]+dy[d],1).position().x() != 0){
                 LoqAction* action = new LoqAction(1,pos[0]+dx[d],pos[1]+dy[d],1);
@@ -200,6 +200,10 @@ public:
                 else
                     delete action;
             }
+        }*/
+
+        for (auto it : get_all_best_move_actions()){
+            actions.push_back(it);
         }
 
         int compen = 0;
